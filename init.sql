@@ -10,7 +10,7 @@ CREATE TABLE asset_requests (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for faster queries
+
 CREATE INDEX idx_employee_id ON asset_requests(employee_id);
 CREATE INDEX idx_status ON asset_requests(status);
 CREATE INDEX idx_employee_name ON asset_requests(employee_name);
