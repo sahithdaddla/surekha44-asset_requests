@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Asset Request</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #2f3790 0%, #7dacf4 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .request-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #34495e;
+            font-weight: 500;
+        }
+        
+        .required-star {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1.5px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        textarea {
+            resize: none;
+            min-height: 100px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            border-width: 1.5px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        input.error, textarea.error, select.error {
+            border-color: #e74c3c;
+        }
+
+        .char-count {
+            position: absolute;
+            right: 10px;
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            bottom: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .submit-btn {
+            background: #3498db;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #2980b9;
+        }
+
+        .submit-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            color: white;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+            z-index: 1000;
+        }
+
+        .notification.success {
+            background: #2ecc71;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        input[type="date"] {
+            position: relative;
+            padding-right: 30px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 2px;
+            opacity: 1;
+            filter: invert(0.6);
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-color: transparent;
+            z-index: 10;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            filter: invert(0.8);
+        }
+
+        input[type="date"]::after {
+            content: "📅";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.7;
+            display: none;
+        }
+
+        .label-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .info-icon {
+            margin-left: 5px;
+            color: #3498db;
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e3f2fd;
+            position: relative;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            left: 35px;
+            top: -1px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tooltip.show {
+            display: block;
+        }
+        
+        .tooltip:before {
+            content: "";
+            position: absolute;
+            left: -5px;
+            top: 10px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-right: 5px solid #2c3e50;
+        }
+        
+        .other-asset-field {
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .other-asset-field.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Employee Asset Request Portal</h1>
+    </nav>
+
+    <div class="container">
+        <div class="request-form">
+            <form id="assetRequestForm" novalidate>
+                <div class="form-group">
+                    <label for="employeeName">Employee Name <span class="required-star">*</span></label>
+                    <input type="text" id="employeeName" required placeholder="e.g. John Smith" maxlength="40">
+                    <div class="error-message" id="employeeNameError"></div>
+                    <div class="char-count" id="employeeNameCount">0/40</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-container">
+                        <label for="employeeID">Employee ID<span class="required-star">*</span></label>
+                        <span class="info-icon" id="idInfoIcon">i
+                            <div class="tooltip" id="idTooltip">Employee ID must start with ATS0 followed by 3 digits. Example: ATS0123</div>
+                        </span>
+                    </div>
+                    <input type="text" id="employeeID" maxlength="7" required placeholder="e.g. ATS0123">
+                    <div class="error-message" id="employeeIDError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="assetType">Asset Type<span class="required-star">*</span></label>
+                    <select id="assetType" required>
+                        <option value="">Select an Asset</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Mouse">Mouse</option>
+                        <option value="Charger">Charger</option>
+                        <option value="Chair">Chair</option>
+                        <option value="Table">Table</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="error-message" id="assetTypeError"></div>
+                    
+                    <div class="other-asset-field" id="otherAssetField">
+                        <label for="otherAssetName">Asset Name<span class="required-star">*</span></label>
+                        <input type="text" id="otherAssetName" placeholder="Enter asset name" maxlength="30">
+                        <div class="error-message" id="otherAssetNameError"></div>
+                        <div class="char-count" id="otherAssetNameCount">0/30</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">Reason for Request <span class="required-star">*</span></label>
+                    <textarea id="reason" required maxlength="300"></textarea>
+                    <div class="error-message" id="reasonError"></div>
+                    <div class="char-count" id="reasonCount">0/300</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="requestDate">Request Date<span class="required-star">*</span></label>
+                    <input type="date" id="requestDate" required>
+                    <div class="error-message" id="requestDateError"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Submit Request</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Utility Functions
+        function showError(inputElement, errorMessage) {
+            const errorDiv = document.getElementById(`${inputElement.id}Error`);
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            inputElement.classList.add('error');
+        }
+
+        function hideError(inputElement) {
+            const errorDiv = document.getElementById(`${inputElement.id}Error`);
+            errorDiv.style.display = 'none';
+            inputElement.classList.remove('error');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Validation Functions
+        function validateEmployeeName(name) {
+            const trimmedName = name.trim();
+            return trimmedName.length >= 5 && trimmedName.length <= 40;
+        }
+
+        function validateReason(reason) {
+            const trimmedReason = reason.trim();
+            return trimmedReason.length >= 5 && trimmedReason.length <= 300;
+        }
+
+        function validateOtherAssetName(name) {
+            const trimmedName = name.trim();
+            const isValidFormat = /^[A-Za-z\s]+$/.test(trimmedName);
+            return isValidFormat && trimmedName.length >= 3 && trimmedName.length <= 30;
+        }
+
+        function countChars(str) {
+            return str.length;
+        }
+
+        function validateDate(selectedDate) {
+            if (!selectedDate) return false;
+            const date = new Date(selectedDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const twoMonthsLater = new Date(today);
+            twoMonthsLater.setMonth(today.getMonth() + 2);
+            return date >= today && date <= twoMonthsLater;
+        }
+
+        function clearErrorMessages() {
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach(message => {
+                message.style.display = 'none';
+            });
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+
+        function hasConsecutiveDuplicates(text, type) {
+            if (type === 'digit') {
+                return /(\d)\1/.test(text);
+            } else if (type === 'special') {
+                return /([^\w\s])(\1)/.test(text);
+            }
+            return false;
+        }
+
+        function handleSpaceRestrictions(value) {
+            if (value.startsWith(' ')) {
+                return value.substring(1);
+            }
+            if (value.includes('  ')) {
+                return value.replace(/\s+/g, ' ');
+            }
+            return value;
+        }
+
+        // Event Listeners and Setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('requestDate');
+            if (dateInput.type !== 'date') {
+                dateInput.style.setProperty('--calendar-display', 'inline');
+                dateInput.setAttribute('placeholder', 'DD/MM/YYYY');
+            }
+
+            const infoIcon = document.getElementById('idInfoIcon');
+            const tooltip = document.getElementById('idTooltip');
+
+            infoIcon.addEventListener('mouseenter', function() {
+                tooltip.classList.add('show');
+            });
+
+            infoIcon.addEventListener('mouseleave', function() {
+                tooltip.classList.remove('show');
+            });
+
+            infoIcon.addEventListener('click', function(e) {
+                e.preventDefault();
+                tooltip.classList.toggle('show');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== infoIcon && tooltip.classList.contains('show')) {
+                    tooltip.classList.remove('show');
+                }
+            });
+
+            updateCharCount('employeeName');
+            updateCharCount('reason');
+            updateCharCount('otherAssetName');
+
+            setupCalendarLimits();
+
+            document.getElementById('assetType').addEventListener('change', function() {
+                const otherField = document.getElementById('otherAssetField');
+                if (this.value === 'Other') {
+                    otherField.classList.add('show');
+                } else {
+                    otherField.classList.remove('show');
+                    document.getElementById('otherAssetName').value = '';
+                    hideError(document.getElementById('otherAssetName'));
+                }
+                if (!this.value) {
+                    showError(this, 'Please select an asset type');
+                } else {
+                    hideError(this);
+                }
+            });
+        });
+
+        function updateCharCount(elementId) {
+            const element = document.getElementById(elementId);
+            const countElement = document.getElementById(`${elementId}Count`);
+            const charCount = element.value.length;
+            if (elementId === 'employeeName') {
+                countElement.textContent = `${charCount}/40`;
+            } else if (elementId === 'reason') {
+                countElement.textContent = `${charCount}/300`;
+            } else if (elementId === 'otherAssetName') {
+                countElement.textContent = `${charCount}/30`;
+            }
+        }
+
+        function setupCalendarLimits() {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const twoMonthsLater = new Date(today);
+            twoMonthsLater.setMonth(today.getMonth() + 2);
+            const twoMonthsLaterStr = twoMonthsLater.toISOString().split('T')[0];
+            const dateInput = document.getElementById('requestDate');
+            dateInput.setAttribute('min', todayStr);
+            dateInput.setAttribute('max', twoMonthsLaterStr);
+        }
+
+        document.getElementById('employeeName').addEventListener('input', function(e) {
+            const cursorPos = this.selectionStart;
+            let validInput = handleSpaceRestrictions(this.value);
+            validInput = validInput.replace(/[^A-Za-z\s]/g, '');
+            if (validInput.length > 40) {
+                validInput = validInput.substring(0, 40);
+            }
+            if (validInput !== this.value) {
+                this.value = validInput;
+                if (cursorPos <= validInput.length) {
+                    this.setSelectionRange(cursorPos, cursorPos);
+                }
+            }
+            updateCharCount('employeeName');
+            if (this.value.trim().length < 5) {
+                showError(this, 'Name must contain at least 5 characters');
+            } else {
+                hideError(this);
+            }
+        });
+
+        document.getElementById('employeeID').addEventListener('input', function() {
+            const validInput = this.value.replace(/[^A-Za-z0-9]/g, '');
+            if (validInput !== this.value) {
+                this.value = validInput;
+                showError(this, 'Special characters are not allowed in Employee ID');
+            } else {
+                if (!/^ATS0\d{3}$/.test(this.value)) {
+                    if (this.value.length >= 7) {
+                        showError(this, 'ID must be in format ATS0 followed by 3 digits (e.g., ATS0123)');
+                    } else if (this.value.length > 0) {
+                        showError(this, 'ID must start with ATS0 followed by 3 digits');
+                    } else {
+                        hideError(this);
+                    }
+                } else if (this.value.endsWith('000')) {
+                    showError(this, 'ID cannot end with 000');
+                } else {
+                    hideError(this);
+                }
+            }
+        });
+
+        document.getElementById('requestDate').addEventListener('change', function() {
+            if (!validateDate(this.value)) {
+                showError(this, 'Please select a date between today and 2 months from now');
+            } else {
+                hideError(this);
+            }
+        });
+
+        document.getElementById('otherAssetName').addEventListener('input', function(e) {
+            const cursorPos = this.selectionStart;
+            let validInput = handleSpaceRestrictions(this.value);
+            validInput = validInput.replace(/[^A-Za-z\s]/g, '');
+            if (validInput.length > 30) {
+                validInput = validInput.substring(0, 30);
+                showError(this, 'Asset name cannot exceed 30 characters');
+            }
+            if (validInput !== this.value) {
+                this.value = validInput;
+                if (cursorPos <= validInput.length) {
+                    this.setSelectionRange(cursorPos, cursorPos);
+                }
+            }
+            updateCharCount('otherAssetName');
+            if (!/^[A-Za-z\s]+$/.test(this.value) && this.value.trim().length > 0) {
+                showError(this, 'Asset name must contain only letters and spaces');
+            } else if (this.value.trim().length < 3) {
+                showError(this, 'Asset name must be at least 3 characters');
+            } else if (this.value.trim().length > 30) {
+                showError(this, 'Asset name cannot exceed 30 characters');
+            } else {
+                hideError(this);
+            }
+        });
+
+        document.getElementById('reason').addEventListener('input', function(e) {
+            const cursorPos = this.selectionStart;
+            let validInput = handleSpaceRestrictions(this.value);
+            if (validInput.length > 300) {
+                validInput = validInput.substring(0, 300);
+            }
+            if (hasConsecutiveDuplicates(validInput, 'digit')) {
+                showError(this, 'Cannot use same digit multiple times in a row');
+            } else if (hasConsecutiveDuplicates(validInput, 'special')) {
+                showError(this, 'Cannot use same special character multiple times in a row');
+            } else if (validInput.trim().length < 5) {
+                showError(this, 'Reason must contain at least 5 characters');
+            } else {
+                hideError(this);
+            }
+            if (validInput !== this.value) {
+                this.value = validInput;
+                if (cursorPos <= validInput.length) {
+                    this.setSelectionRange(cursorPos, cursorPos);
+                }
+            }
+            updateCharCount('reason');
+        });
+
+        document.getElementById('assetRequestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const employeeName = document.getElementById('employeeName');
+            const employeeID = document.getElementById('employeeID');
+            const assetType = document.getElementById('assetType');
+            const otherAssetName = document.getElementById('otherAssetName');
+            const reason = document.getElementById('reason');
+            const requestDate = document.getElementById('requestDate');
+
+            let isValid = true;
+            clearErrorMessages();
+
+            if (!validateEmployeeName(employeeName.value)) {
+                if (employeeName.value.trim().length < 5) {
+                    showError(employeeName, 'Name must contain at least 5 characters');
+                } else {
+                    showError(employeeName, 'Name cannot exceed 40 characters');
+                }
+                isValid = false;
+            }
+
+            if (!/^ATS0\d{3}$/.test(employeeID.value)) {
+                showError(employeeID, 'ID must be in format ATS0 followed by 3 digits (e.g., ATS0123)');
+                isValid = false;
+            } else if (employeeID.value.endsWith('000')) {
+                showError(employeeID, 'ID cannot end with 000');
+                isValid = false;
+            }
+
+            if (!assetType.value) {
+                showError(assetType, 'Please select an asset type');
+                isValid = false;
+            }
+
+            if (assetType.value === 'Other') {
+                if (!validateOtherAssetName(otherAssetName.value)) {
+                    if (!/^[A-Za-z\s]+$/.test(otherAssetName.value.trim()) && otherAssetName.value.trim().length > 0) {
+                        showError(otherAssetName, 'Asset name must contain only letters and spaces');
+                    } else if (otherAssetName.value.trim().length < 3) {
+                        showError(otherAssetName, 'Asset name must be at least 3 characters');
+                    } else {
+                        showError(otherAssetName, 'Asset name cannot exceed 30 characters');
+                    }
+                    isValid = false;
+                }
+            }
+
+            if (!validateReason(reason.value)) {
+                if (reason.value.trim().length < 5) {
+                    showError(reason, 'Reason must contain at least 5 characters');
+                } else {
+                    showError(reason, 'Reason cannot exceed 300 characters');
+                }
+                isValid = false;
+            }
+
+            if (hasConsecutiveDuplicates(reason.value, 'digit')) {
+                showError(reason, 'Cannot use same digit multiple times in a row');
+                isValid = false;
+            }
+            if (hasConsecutiveDuplicates(reason.value, 'special')) {
+                showError(reason, 'Cannot use same special character multiple times in a row');
+                isValid = false;
+            }
+
+            if (!requestDate.value) {
+                showError(requestDate, 'Please select a date');
+                isValid = false;
+            } else if (!validateDate(requestDate.value)) {
+                showError(requestDate, 'Please select a date between today and 2 months from now');
+                isValid = false;
+            }
+
+            if (isValid) {
+                const dateParts = requestDate.value.split('-');
+                const formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`; // Ensure YYYY-MM-DD format
+                const request = {
+                    employeeName: employeeName.value.trim(),
+                    employeeID: employeeID.value,
+                    assetType: assetType.value,
+                    otherAssetName: assetType.value === 'Other' ? otherAssetName.value.trim() : '',
+                    reason: reason.value.trim(),
+                    requestDate: formattedDate
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/requests', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(request)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showNotification('Request submitted successfully!', 'success');
+                        this.reset();
+                        document.getElementById('otherAssetField').classList.remove('show');
+                        updateCharCount('employeeName');
+                        updateCharCount('reason');
+                        updateCharCount('otherAssetName');
+                    } else {
+                        showError(assetType, result.error);
+                        showNotification('Please fix the errors in the form', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error submitting request:', error);
+                    showNotification('Failed to submit request. Please try again.', 'error');
+                }
+            } else {
+                showNotification('Please fix the errors in the form', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

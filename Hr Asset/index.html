@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Asset Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #2c3e50;
+            padding: 1rem;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: clamp(1.5rem, 5vw, 1.8rem);
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.active {
+            border: 2px solid #3498db;
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .number {
+            color: #2c3e50;
+            font-size: clamp(1.5rem, 4vw, 1.8rem);
+            font-weight: bold;
+        }
+
+        .requests-table {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .table-title {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #3498db;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+        }
+
+        .filter-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .filter-controls {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        .search-icon-left {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+
+        .search-bar-with-left-icon {
+            padding-left: 2.5rem;
+        }
+
+        .search-icon-right {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #3498db;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .search-icon-right:hover {
+            color: #2980b9;
+        }
+
+        .dropdown-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .dropdown-label {
+            font-weight: bold;
+            color: #2c3e50;
+            white-space: nowrap;
+        }
+
+        .status-dropdown {
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            color: #2c3e50;
+            font-size: 1rem;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .clear-btn, .delete-selected-btn {
+            padding: 0.7rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .clear-btn {
+            background: #34495e;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #2c3e50;
+        }
+
+        .delete-selected-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-selected-btn:hover {
+            background: #c0392b;
+        }
+
+        .delete-selected-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .checkbox-cell {
+            width: 40px;
+            text-align: center;
+        }
+
+        .status-cell {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .approve-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background: #27ae60;
+        }
+
+        .reject-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background: #c0392b;
+        }
+
+        .view-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #2980b9;
+        }
+
+        .status-pending, .status-approved, .status-rejected {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .status-pending {
+            color: #9c4a00;
+            background: #fef5e7;
+            box-shadow: 0 2px 4px rgba(243, 156, 18, 0.2);
+        }
+
+        .status-approved {
+            color: #1a7d3e;
+            background: #e8f8f0;
+            box-shadow: 0 2px 4px rgba(46, 204, 113, 0.2);
+        }
+
+        .status-rejected {
+            color: #a82315;
+            background: #fceae9;
+            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+        }
+
+        .status-pending:hover, .status-approved:hover, .status-rejected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 600px;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {opacity: 0; transform: translateY(-20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+        }
+
+        .close-modal {
+            color: #aaa;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #2c3e50;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .detail-label {
+            width: 40%;
+            font-weight: bold;
+            color: #34495e;
+            padding-right: 1rem;
+        }
+
+        .detail-value {
+            width: 60%;
+            color: #2c3e50;
+        }
+
+        .detail-value.status-pending,
+        .detail-value.status-approved,
+        .detail-value.status-rejected {
+            width: auto;
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        @media (max-width: 576px) {
+            .detail-label, .detail-value {
+                width: 100%;
+            }
+            .detail-label {
+                margin-bottom: 0.3rem;
+            }
+        }
+
+        .detail-row.reason {
+            flex-direction: column;
+        }
+
+        .detail-row.reason .detail-label {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-row.reason .detail-value {
+            width: 100%;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+            word-wrap: break-word;
+            box-sizing: border-box;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0.5rem auto;
+                padding: 0 0.5rem;
+            }
+
+            .dashboard {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 0.8rem;
+            }
+
+            .stat-card {
+                padding: 0.8rem;
+            }
+
+            .stat-card .number {
+                font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+            }
+
+            .requests-table {
+                padding: 0.8rem;
+            }
+
+            .action-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            table {
+                min-width: 600px;
+            }
+
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .status-cell {
+                min-width: 100px;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 1rem;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar h1 {
+                font-size: clamp(1.2rem, 4vw, 1.4rem);
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                min-width: 100%;
+            }
+
+            .status-dropdown {
+                min-width: 120px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .status-cell {
+                min-width: 80px;
+            }
+
+            .status-pending, .status-approved, .status-rejected {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.8rem;
+                min-width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>HR Asset Management Portal</h1>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="stat-card" data-filter="all" onclick="filterByDashboard('all')">
+                <h3>Total Requests</h3>
+                <div id="totalRequests" class="number">0</div>
+            </div>
+            <div class="stat-card" data-filter="Pending" onclick="filterByDashboard('Pending')">
+                <h3>Pending Requests</h3>
+                <div id="pendingRequests" class="number">0</div>
+            </div>
+            <div class="stat-card" data-filter="Approved" onclick="filterByDashboard('Approved')">
+                <h3>Approved Requests</h3>
+                <div id="approvedRequests" class="number">0</div>
+            </div>
+            <div class="stat-card" data-filter="Rejected" onclick="filterByDashboard('Rejected')">
+                <h3>Rejected Requests</h3>
+                <div id="rejectedRequests" class="number">0</div>
+            </div>
+        </div>
+
+        <div class="requests-table">
+            <h2 class="table-title">Asset Requests</h2>
+            
+            <div class="filter-controls">
+                <div class="search-container">
+                    <span class="search-icon-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="text" id="searchBar" class="search-bar search-bar-with-left-icon" placeholder="Search by employee name...">
+                    <span class="search-icon-right" id="searchButtonRight">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                </div>
+                
+                <div class="dropdown-container">
+                    <label for="statusDropdown" class="dropdown-label">Status:</label>
+                    <select id="statusDropdown" class="status-dropdown">
+                        <option value="all">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    <div class="action-buttons">
+                        <button class="clear-btn" onclick="clearRecords()">Clear Records</button>
+                        <button class="delete-selected-btn" id="deleteSelectedBtn" onclick="deleteSelectedRecords()" disabled>Delete Selected</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                            </th>
+                            <th>Employee Name</th>
+                            <th>Employee ID</th>
+                            <th>Asset Type</th>
+                            <th>Request Date</th>
+                            <th class="status-cell">Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Request Details</h2>
+                <span class="close-modal" onclick="closeModal()">×</span>
+            </div>
+            <div id="detailsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global state variables
+        let currentStatusFilter = 'all';
+        let currentSearchTerm = '';
+
+        // Utility function to format date to dd/mm/yyyy
+        function formatDateToDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        async function updateDashboard() {
+            try {
+                const query = new URLSearchParams();
+                if (currentStatusFilter !== 'all') {
+                    query.append('status', currentStatusFilter);
+                }
+                if (currentSearchTerm) {
+                    query.append('search', currentSearchTerm);
+                }
+
+                const response = await fetch(`http://localhost:3000/api/requests?${query}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch requests: ${response.statusText}`);
+                }
+                const requests = await response.json();
+                console.log('Fetched requests:', requests); // Debug log to inspect API response
+
+                // Normalize status for counting
+                const totalCount = requests.length;
+                const pendingCount = requests.filter(req => req.status.toLowerCase() === 'pending').length;
+                const approvedCount = requests.filter(req => req.status.toLowerCase() === 'approved').length;
+                const rejectedCount = requests.filter(req => req.status.toLowerCase() === 'rejected').length;
+
+                document.getElementById('totalRequests').textContent = totalCount;
+                document.getElementById('pendingRequests').textContent = pendingCount;
+                document.getElementById('approvedRequests').textContent = approvedCount;
+                document.getElementById('rejectedRequests').textContent = rejectedCount;
+
+                updateTable(requests);
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+                alert('Failed to load dashboard data. Please check the server and try again.');
+            }
+        }
+
+        function updateTable(requests) {
+            const tableBody = document.getElementById('requestsTableBody');
+            tableBody.innerHTML = '';
+
+            if (requests.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-records">No records found</td>
+                    </tr>
+                `;
+                document.getElementById('selectAll').checked = false;
+                toggleDeleteButton();
+                return;
+            }
+
+            requests.forEach(request => {
+                const row = document.createElement('tr');
+                const displayAssetType = request.asset_type === 'Other' && request.other_asset_name ? request.other_asset_name : request.asset_type;
+                const formattedDate = formatDateToDDMMYYYY(request.request_date);
+                const statusLower = request.status.toLowerCase();
+                row.innerHTML = `
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox" data-id="${request.id}" onchange="toggleDeleteButton()">
+                    </td>
+                    <td>${request.employee_name}</td>
+                    <td>${request.employee_id}</td>
+                    <td>${displayAssetType}</td>
+                    <td>${formattedDate}</td>
+                    <td class="status-cell"><span class="status-${statusLower}">${request.status}</span></td>
+                    <td>
+                        <button class="action-btn view-btn" onclick="viewDetails(${request.id})">
+                            View
+                        </button>
+                        ${statusLower === 'pending' ? `
+                            <button class="action-btn approve-btn" onclick="confirmStatusUpdate(${request.id}, 'Approved', '${request.employee_name}', '${request.employee_id}')">
+                                Approve
+                            </button>
+                            <button class="action-btn reject-btn" onclick="confirmStatusUpdate(${request.id}, 'Rejected', '${request.employee_name}', '${request.employee_id}')">
+                                Reject
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            toggleDeleteButton();
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            toggleDeleteButton();
+        }
+
+        function toggleDeleteButton() {
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            const deleteButton = document.getElementById('deleteSelectedBtn');
+            deleteButton.disabled = checkboxes.length === 0;
+        }
+
+        async function deleteSelectedRecords() {
+            if (!confirm('Are you sure you want to delete the selected records?')) {
+                return;
+            }
+
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+
+            try {
+                const response = await fetch('http://localhost:3000/api/requests', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: idsToDelete })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    document.getElementById('selectAll').checked = false;
+                    await updateDashboard();
+                } else {
+                    alert(result.error || 'Failed to delete selected records');
+                }
+            } catch (error) {
+                console.error('Error deleting records:', error);
+                alert('Failed to delete selected records. Please try again.');
+            }
+        }
+
+        async function confirmStatusUpdate(requestId, status, employeeName, employeeId) {
+            if (!confirm(`Do you want to ${status.toLowerCase()} the request for ${employeeName} (ID: ${employeeId})?`)) {
+                return;
+            }
+            await updateStatus(requestId, status);
+        }
+
+        async function updateStatus(requestId, status) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`Request ${status.toLowerCase()} successfully`);
+                    await updateDashboard();
+                } else {
+                    alert(result.error || `Failed to ${status.toLowerCase()} request`);
+                }
+            } catch (error) {
+                console.error(`Error updating status to ${status}:`, error);
+                alert(`Failed to ${status.toLowerCase()} request. Please try again.`);
+            }
+        }
+
+        async function clearRecords() {
+            if (!confirm('Are you sure you want to clear all records?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/requests/clear', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    await updateDashboard();
+                } else {
+                    alert(result.error || 'Failed to clear records');
+                }
+            } catch (error) {
+                console.error('Error clearing records:', error);
+                alert('Failed to clear records. Please try again.');
+            }
+        }
+
+        async function viewDetails(requestId) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/requests?status=all`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch requests');
+                }
+                const requests = await response.json();
+                const request = requests.find(req => req.id === requestId);
+
+                if (!request) {
+                    alert("Request not found!");
+                    return;
+                }
+
+                const displayAssetType = request.asset_type === 'Other' && request.other_asset_name ? request.other_asset_name : request.asset_type;
+                const formattedDate = formatDateToDDMMYYYY(request.request_date);
+                const detailsContent = document.getElementById('detailsContent');
+                detailsContent.innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">Employee Name:</div>
+                        <div class="detail-value">${request.employee_name}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Employee ID:</div>
+                        <div class="detail-value">${request.employee_id}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Asset Type:</div>
+                        <div class="detail-value">${displayAssetType}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Request Date:</div>
+                        <div class="detail-value">${formattedDate}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Status:</div>
+                        <div class="detail-value status-${request.status.toLowerCase()}">${request.status}</div>
+                    </div>
+                    <div class="detail-row reason">
+                        <div class="detail-label">Reason for Request:</div>
+                        <div class="detail-value">${request.reason}</div>
+                    </div>
+                `;
+
+                document.getElementById('detailsModal').style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching request details:', error);
+                alert('Failed to load request details. Please try again.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            document.getElementById('statusDropdown').value = status;
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.filter === status);
+            });
+            console.log('Filtering by status:', status); // Debug log
+            updateDashboard();
+        }
+
+        function filterByDashboard(status) {
+            currentStatusFilter = status;
+            document.getElementById('statusDropdown').value = status;
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.filter === status);
+            });
+            console.log('Dashboard filter applied:', status); // Debug log
+            updateDashboard();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function setupEventListeners() {
+            const statusDropdown = document.getElementById('statusDropdown');
+            statusDropdown.addEventListener('change', (e) => {
+                filterByStatus(e.target.value);
+            });
+
+            const searchBar = document.getElementById('searchBar');
+            searchBar.addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value;
+                updateDashboard();
+            });
+
+            const searchButtonRight = document.getElementById('searchButtonRight');
+            searchButtonRight.addEventListener('click', () => {
+                currentSearchTerm = searchBar.value;
+                updateDashboard();
+                searchBar.focus();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateDashboard();
+            filterByStatus('all');
+            setInterval(() => updateDashboard(), 5000);
+        });
+    </script>
+</body>
+</html>
