@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: asset44-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: asset_management
+    ports:
+      - "5462:5432"
+    volumes:
+      - pgdata_asset44:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks: [asset-net]
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: asset44-backend
+    restart: unless-stopped
+    depends_on: [postgres]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: asset_management
+      DB_USER: postgres
+      DB_PASSWORD: admin123
+      PORT: 3031
+    ports:
+      - "3031:3031"
+    networks: [asset-net]
+
+  employee-asset:
+    build:
+      context: ./Employee-Asset
+      dockerfile: Dockerfile
+    container_name: asset44-ui-employee
+    restart: unless-stopped
+    depends_on: [backend]
+    ports:
+      - "8172:80"
+    networks: [asset-net]
+
+  hr-asset:
+    build:
+      context: ./Hr-Asset
+      dockerfile: Dockerfile
+    container_name: asset44-ui-hr
+    restart: unless-stopped
+    depends_on: [backend]
+    ports:
+      - "8173:80"
+    networks: [asset-net]
+
+networks:
+  asset-net:
+
+volumes:
+  pgdata_asset44:
+
