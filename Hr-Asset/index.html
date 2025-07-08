@@ -642,7 +642,7 @@
                     query.append('search', currentSearchTerm);
                 }
 
-                const response = await fetch(`http://16.171.151.154:3031/api/requests?${query}`);
+                const response = await fetch(`http://3.85.61.23:3602/api/requests?${query}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch requests: ${response.statusText}`);
                 }
@@ -740,7 +740,7 @@
             const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
 
             try {
-                const response = await fetch('http://16.171.151.154:3031/api/requests', {
+                const response = await fetch('http://3.85.61.23:3602/api/requests', {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -772,7 +772,7 @@
 
         async function updateStatus(requestId, status) {
             try {
-                const response = await fetch(`http://16.171.151.154:3031/api/requests/${requestId}`, {
+                const response = await fetch(`http://3.85.61.23:3602/api/requests/${requestId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -800,7 +800,7 @@
             }
 
             try {
-                const response = await fetch('http://16.171.151.154:3031/api/requests/clear', {
+                const response = await fetch('http://3.85.61.23:3602/api/requests/clear', {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -823,7 +823,7 @@
 
         async function viewDetails(requestId) {
             try {
-                const response = await fetch(`http://16.171.151.154:3031/api/requests?status=all`);
+                const response = await fetch(`http://3.85.61.23:3602/api/requests?status=all`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch requests');
                 }

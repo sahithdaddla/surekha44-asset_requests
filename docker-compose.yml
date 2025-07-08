@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: admin123
       POSTGRES_DB: asset_management
     ports:
-      - "5462:5432"
+      - "5602:5432"
     volumes:
       - pgdata_asset44:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -29,9 +29,9 @@ services:
       DB_NAME: asset_management
       DB_USER: postgres
       DB_PASSWORD: admin123
-      PORT: 3031
+      PORT: 3602
     ports:
-      - "3031:3031"
+      - "3602:3602"
     networks: [asset-net]
 
   employee-asset:
@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
     depends_on: [backend]
     ports:
-      - "8172:80"
+      - "8604:80"
     networks: [asset-net]
 
   hr-asset:
@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
     depends_on: [backend]
     ports:
-      - "8173:80"
+      - "8605:80"
     networks: [asset-net]
 
 networks:
